@@ -1,3 +1,5 @@
+import pymysql
+
 import util
 
 baidu_url = "http://www.baidu.com/baidu?wd="
@@ -45,7 +47,26 @@ def search_hot_words(one_hot_word):
 
 # 根据一个快照链接，得到具体的网页内容
 def get_content_by_one_href(one_href):
-    pass
+    print(one_href)
+    html_text = util.get_html_text(one_href)
+    head_str = '<div style="position:relative">'
+    body_str_tmp = html_text.split('<div style="position:relative">')[-1]
+    body_str = body_str_tmp.split('</body>')[0]
+    new_html = head_str + body_str
+    return new_html
+
+
+# 执行存入数据库的操作
+def save_to_db(one_word, html_str):
+    db = util.get_mysql_db()
+    cursor = db.cursor()
+    new_html=pymysql.escape_string(html_str)
+    sql_str = "insert into articles (html,hot_word) VALUES(\'%s\',\'%s\');" % (new_html, one_word)
+    print(sql_str)
+    cursor.execute(sql_str)
+    db.commit()
+    cursor.close()
+    db.close()
 
 
 if __name__ == '__main__':
@@ -54,6 +75,10 @@ if __name__ == '__main__':
     # 遍历每个热词，然后搜索每个热词，得到html网页里所有百度快照的链接
     print(len(hot_set))
     for one_word in hot_set:
+        # 根据一个搜索的关键词查询所有的百度快照url
         href_list = search_hot_words(one_word)
         for one_href in href_list:
-            get_content_by_one_href(one_href)
+            # 得到百度快照ＵＲＬ的内容
+            new_html = get_content_by_one_href(one_href)
+            # 执行存入数据库的操作
+            save_to_db(one_word, new_html)

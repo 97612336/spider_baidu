@@ -16,8 +16,9 @@ def get_mysql_db():
     conf_dict = json.loads(conf_str)
     conn = pymysql.connect(host=conf_dict.get("SqlHost"), port=int(conf_dict.get("SqlPort")),
                            user=conf_dict.get("SqlUser"), password=conf_dict.get("SqlPassword"),
-                           db="novel", charset='utf8mb4')
+                           db="bigbiy_web", charset='utf8mb4')
     return conn
+
 
 # 获取URL的网页HTML
 def get_html_text(url):
@@ -35,13 +36,14 @@ def get_html_text(url):
         return ''
     return html_text
 
+
 def html_parser(html_text, compl_str):
     # 解析HTML文件
     # try:
-        tree = etree.HTML(html_text)
-        res = tree.xpath(compl_str)
+    tree = etree.HTML(html_text)
+    res = tree.xpath(compl_str)
     # except:
     #     print(datetime.datetime.now())
     #     print("can't parse html")
     #     return
-        return res
+    return res
