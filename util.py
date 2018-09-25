@@ -39,11 +39,11 @@ def get_html_text(url):
 
 def html_parser(html_text, compl_str):
     # 解析HTML文件
-    # try:
-    tree = etree.HTML(html_text)
-    res = tree.xpath(compl_str)
-    # except:
-    #     print(datetime.datetime.now())
-    #     print("can't parse html")
-    #     return
+    try:
+        tree = etree.HTML(html_text)
+        res = tree.xpath(compl_str)
+    except:
+        print(datetime.datetime.now())
+        print("can't parse html")
+        return
     return res

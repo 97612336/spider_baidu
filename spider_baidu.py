@@ -86,20 +86,49 @@ def del_week_age_articles():
     db.close()
 
 
+###########################
+# 根据热搜词搜索百家号文章链接
+def search_baijia_articles(one_word):
+    new_url = baidu_url + one_word + "%20百家号"
+    html_str = util.get_html_text(new_url)
+    href_res = util.html_parser(html_str, '//div[@class="result c-container "]/h3[@class="t"]/a/@href')
+    return href_res
+
+
+# 根据一个链接，查询链接内文章所有的内容
+def get_article_by_href(one_href):
+    article_html = util.get_html_text(one_href)
+    # 获取文章标题
+    article_title = util.html_parser(article_html, '//*[@id="article"]/div[1]/h2/text()')
+    # 获取文章的内容
+    article_content = util.html_parser(article_html,
+                                       '//p/span[@class="bjh-p"]/text()')
+    # 获取文章的图片
+    article_imgs = util.html_parser(article_html, '//div[@class="img-container"]/img/@src')
+    if article_title and article_content:
+        tmp = {}
+        tmp["desc"] = article_content[0]
+        tmp["titile"] = article_title
+        tmp["content"] = article_content
+        tmp['imgs'] = article_imgs
+        return tmp
+    else:
+        return 0
+
+
 if __name__ == '__main__':
     while 1:
         # 得到所有搜索的热词
         hot_set = get_fengyun_words()
-        # 遍历每个热词，然后搜索每个热词，得到html网页里所有百度快照的链接
         print("共得到%s个关键词" % len(hot_set))
+        # 遍历每个热词，然后搜索每个热词，得到html网页里所有百度的链接
         for one_word in hot_set:
             # 根据一个搜索的关键词查询所有的百度快照url
-            href_list = search_hot_words(one_word)
+            href_list = search_baijia_articles(one_word)
             for one_href in href_list:
                 # 得到百度快照ＵＲＬ的内容
-                new_html = get_content_by_one_href(one_href)
+                article_data = get_article_by_href(one_href)
                 # 执行存入数据库的操作
-                save_to_db(one_word, new_html)
         del_week_age_articles()
         # 休息十个小时
         print("运行完一次，休息10个小时")
