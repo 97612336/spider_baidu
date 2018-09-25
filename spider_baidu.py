@@ -1,3 +1,6 @@
+import datetime
+import time
+
 import pymysql
 
 import util
@@ -47,7 +50,6 @@ def search_hot_words(one_hot_word):
 
 # 根据一个快照链接，得到具体的网页内容
 def get_content_by_one_href(one_href):
-    print(one_href)
     html_text = util.get_html_text(one_href)
     head_str = '<div style="position:relative">'
     body_str_tmp = html_text.split('<div style="position:relative">')[-1]
@@ -60,25 +62,45 @@ def get_content_by_one_href(one_href):
 def save_to_db(one_word, html_str):
     db = util.get_mysql_db()
     cursor = db.cursor()
-    new_html=pymysql.escape_string(html_str)
+    new_html = pymysql.escape_string(html_str)
     sql_str = "insert into articles (html,hot_word) VALUES(\'%s\',\'%s\');" % (new_html, one_word)
-    print(sql_str)
     cursor.execute(sql_str)
+    db.commit()
+    print("成功存入一条数据：%s" % datetime.datetime.now())
+    cursor.close()
+    db.close()
+
+
+# 删除一周前的内容
+def del_week_age_articles():
+    db = util.get_mysql_db()
+    cursor = db.cursor()
+    # 获取当前时间
+    now_time = datetime.datetime.now() - datetime.timedelta(days=7)
+    now_time_str = str(now_time)
+    sql_str = "delete from articles where save_time<'%s';" % (now_time_str)
+    res = cursor.execute(sql_str)
+    print("删除了%s行数据" % res)
     db.commit()
     cursor.close()
     db.close()
 
 
 if __name__ == '__main__':
-    # 得到所有搜索的热词
-    hot_set = get_fengyun_words()
-    # 遍历每个热词，然后搜索每个热词，得到html网页里所有百度快照的链接
-    print(len(hot_set))
-    for one_word in hot_set:
-        # 根据一个搜索的关键词查询所有的百度快照url
-        href_list = search_hot_words(one_word)
-        for one_href in href_list:
-            # 得到百度快照ＵＲＬ的内容
-            new_html = get_content_by_one_href(one_href)
-            # 执行存入数据库的操作
-            save_to_db(one_word, new_html)
+    while 1:
+        # 得到所有搜索的热词
+        hot_set = get_fengyun_words()
+        # 遍历每个热词，然后搜索每个热词，得到html网页里所有百度快照的链接
+        print("共得到%s个关键词" % len(hot_set))
+        for one_word in hot_set:
+            # 根据一个搜索的关键词查询所有的百度快照url
+            href_list = search_hot_words(one_word)
+            for one_href in href_list:
+                # 得到百度快照ＵＲＬ的内容
+                new_html = get_content_by_one_href(one_href)
+                # 执行存入数据库的操作
+                save_to_db(one_word, new_html)
+        del_week_age_articles()
+        # 休息十个小时
+        print("运行完一次，休息10个小时")
+        time.sleep(60 * 60 * 10)
