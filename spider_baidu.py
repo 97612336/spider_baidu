@@ -107,13 +107,30 @@ def get_article_by_href(one_href):
     article_imgs = util.html_parser(article_html, '//div[@class="img-container"]/img/@src')
     if article_title and article_content:
         tmp = {}
+        tmp["title"] = article_title
         tmp["desc"] = article_content[0]
-        tmp["titile"] = article_title
         tmp["content"] = article_content
         tmp['imgs'] = article_imgs
         return tmp
     else:
         return 0
+
+
+# 根据解析到的数据保存到数据库中
+def save_new_article_to_db(article_data):
+    db = util.get_mysql_db()
+    cursor = db.cursor()
+    title = article_data.get('title')
+    desc = article_data.get('desc')
+    content = str(article_data.get('content'))
+    imgs = str(article_data.get('imgs'))
+    sql_str = "insert into articles (title,desc,content,imgs) VALUES(\'%s\',\'%s\',\'%s\',\'%s\');" % (
+        title, desc, content, imgs)
+    cursor.execute(sql_str)
+    db.commit()
+    print("成功存入一条数据：%s" % datetime.datetime.now())
+    cursor.close()
+    db.close()
 
 
 if __name__ == '__main__':
@@ -129,6 +146,8 @@ if __name__ == '__main__':
                 # 得到百度快照ＵＲＬ的内容
                 article_data = get_article_by_href(one_href)
                 # 执行存入数据库的操作
+                if article_data:
+                    save_new_article_to_db(article_data)
         del_week_age_articles()
         # 休息十个小时
         print("运行完一次，休息10个小时")
