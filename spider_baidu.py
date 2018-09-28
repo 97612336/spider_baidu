@@ -154,5 +154,5 @@ if __name__ == '__main__':
                     save_new_article_to_db(article_data, one_word)
         del_week_age_articles()
         # 休息十个小时
-        print("运行完一次，休息10个小时")
-        time.sleep(60 * 60 * 10)
+        print("运行完一次，休息13个小时")
+        time.sleep(60 * 60 * 13)
