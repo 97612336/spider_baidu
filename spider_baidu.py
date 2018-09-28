@@ -117,9 +117,7 @@ def get_article_by_href(one_href):
 
 
 # 根据解析到的数据保存到数据库中
-def save_new_article_to_db(article_data, one_word):
-    db = util.get_mysql_db()
-    cursor = db.cursor()
+def save_new_article_to_db(cursor, article_data, one_word):
     title = article_data.get('title')
     info = article_data.get('desc')
     content = pymysql.escape_string(str(article_data.get('content')))
@@ -133,12 +131,16 @@ def save_new_article_to_db(article_data, one_word):
         print(sql_str)
         print(e)
     print("成功存入一条数据：%s" % datetime.datetime.now())
-    cursor.close()
-    db.close()
 
 
 if __name__ == '__main__':
     while 1:
+        # 获取数据库链接对象
+        try:
+            db = util.get_mysql_db()
+        except:
+            break
+        cursor = db.cursor()
         # 得到所有搜索的热词
         hot_set = get_fengyun_words()
         print("共得到%s个关键词" % len(hot_set))
@@ -151,8 +153,10 @@ if __name__ == '__main__':
                 article_data = get_article_by_href(one_href)
                 # 执行存入数据库的操作
                 if article_data:
-                    save_new_article_to_db(article_data, one_word)
+                    save_new_article_to_db(cursor, article_data, one_word)
         del_week_age_articles()
+        cursor.close()
+        db.close()
         # 休息十个小时
         print("运行完一次，休息13个小时")
         time.sleep(60 * 60 * 13)
